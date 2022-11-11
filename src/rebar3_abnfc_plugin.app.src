@@ -1,0 +1,13 @@
+{application,
+ rebar3_abnfc_plugin,
+ [{description, "A rebar3 plugin for compiling .abnf files"},
+  {vsn, "0.0.0"},
+  {applications,
+   [kernel,
+    stdlib,
+    abnfc
+   ]},
+  {maintainers, ["massemanet"]},
+  {licenses, ["MIT"]},
+  {links, [{"Github", "https://github.com/massemanet/rebar3_abnf_plugin"}]}
+ ]}.
