@@ -30,7 +30,8 @@ init(State) ->
 
 -spec do(rebar_state:t()) -> {ok, rebar_state:t()}.
 do(State) ->
-    COMPILE = fun(App) -> rebar3_abnfc_compiler:compile(App, State) end,
+    Args = rebar_state:command_parsed_args(State),
+    COMPILE = fun(App) -> rebar3_abnfc_compiler:compile(App, Args) end,
     lists:foreach(COMPILE, apps(State)),
     {ok, State}.
 
