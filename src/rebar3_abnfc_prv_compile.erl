@@ -21,7 +21,10 @@ init(State) ->
             {module, ?MODULE},            % The module implementation of the task
             {bare, true},                 % The task can be run by the user, always true
             {deps, ?DEPS},                % The list of dependencies
-            {opts, []},                   % list of options understood by the plugin
+            {opts, 
+             [{out, $o, "out_dir", string, "dir"},
+              {module, $m, "mod", atom, "mod"},
+              {verbose, $v, "dbg", boolean, "dbg"}]},
             {example, "rebar3 abnf compile"},
             {short_desc, ?SHORT_DESC},
             {desc, ?DESC}
@@ -30,17 +33,33 @@ init(State) ->
 
 -spec do(rebar_state:t()) -> {ok, rebar_state:t()}.
 do(State) ->
-    Args = rebar_state:command_parsed_args(State),
-    COMPILE = fun(App) -> rebar3_abnfc_compiler:compile(App, Args) end,
-    lists:foreach(COMPILE, apps(State)),
+    {Args, []} = rebar_state:command_parsed_args(State),
+    AppInfos = app_infos(State),
+    lists:foreach(fun(AppInfo) -> compile(AppInfo, Args) end, AppInfos),
     {ok, State}.
 
-apps(State) ->
+-spec format_error(any()) ->  iolist().
+format_error(Reason) ->
+    io_lib:format("~p", [Reason]).
+
+%% ===================================================================
+
+app_infos(State) ->
     case rebar_state:current_app(State) of
         undefined -> rebar_state:project_apps(State);
         AppInfo -> [AppInfo]
     end.
 
--spec format_error(any()) ->  iolist().
-format_error(Reason) ->
-    io_lib:format("~p", [Reason]).
+compile(AppInfo, Args) ->
+    rebar3_abnfc_compiler:compile(opts(AppInfo), Args).
+
+opts(AppInfo) ->
+    Opts0 = #{o => filename:join(rebar_app_info:out_dir(AppInfo), ebin),
+              app_dir => rebar_app_info:dir(AppInfo)},
+    maps:merge(Opts0, abnfc_opts(AppInfo)).
+
+abnfc_opts(AppInfo) ->
+    case dict:find(abnfc_opts, rebar_app_info:opts(AppInfo)) of
+        error -> #{};
+        {ok, AbnfcOpts} -> maps:from_list(dict:to_list(AbnfcOpts))
+    end.
