@@ -30,11 +30,11 @@ compile1(ABNF, Opts) ->
     rebar_api:debug("(~s, ~s):~n(~p, ~p)~n", [Target, ABNF, TargetTime, AbnfTime]),
     [cmp(ABNF, Opts) || TargetTime < AbnfTime].
 
-get_target(ABNF, #{o := OutDir}) ->
-    flat("~s/~s.beam", [OutDir, filename:basename(ABNF, ".abnf")]).
+get_target(_, #{mod := Mod, o := OutDir}) -> fn(OutDir, Mod);
+get_target(ABNF, #{o := OutDir}) -> fn(OutDir, filename:basename(ABNF, ".abnf")).
 
-flat(F, As) ->
-    lists:flatten(io_lib:format(F, As)).
+fn(OutDir, Mod) ->
+    lists:flatten(io_lib:format("~s/~s.beam", [OutDir, Mod])).
 
 -spec cmp(string(), map()) -> ok.
 cmp(Source, Opts) ->
